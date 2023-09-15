@@ -9,6 +9,8 @@ import os
 import tkinter.ttk as ttk
 from tkinter import filedialog
 from customization import Customization
+from tkinter import messagebox
+
 
 customization_list = []
 
@@ -158,7 +160,6 @@ def play_time():
 
 
 def play(PlayFlag):
-    my_slider.config(state='enabled')
     global csvCounter
     csvCounters = csvCounter
     global Flag
@@ -171,11 +172,22 @@ def play(PlayFlag):
     song = f'C:/Users/ahmed/MusicPlayer-remade/Songs/{song}.mp3'
 
 
-    pygame.mixer.music.load(song)
-    pygame.mixer.music.play(loops=0)
-    Flag = True
-    play_time()
-    playButton.config(bg='cyan')
+
+    try:
+        pygame.mixer.music.load(song)
+        pygame.mixer.music.play(loops=0)
+        Flag = True
+        my_slider.config(state='enabled')
+        play_time()
+        playButton.config(bg='cyan')
+    except:
+        messagebox.showerror(title = "Song missing", message="Please choose a song")
+
+
+
+
+
+
     #slider_position = int(song_length)
     #my_slider.config(to=slider_position,value=0)
 
