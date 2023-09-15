@@ -139,7 +139,6 @@ def play_time():
             # Convert to formatted string
             newconverted_currentTime = f'{int(minutes):02}:{int(seconds):02}.{(int(milliseconds * 1000) + 50):03}'
 
-            print("helper ", newconverted_currentTime)
             statusBar.config(text=f'Time Elapsed: {newconverted_currentTime} of {converted_SongLen}')
             # move along
             next_time = my_slider.get() + 0.05
@@ -159,6 +158,7 @@ def play_time():
 
 
 def play(PlayFlag):
+    my_slider.config(state='enabled')
     global csvCounter
     csvCounters = csvCounter
     global Flag
@@ -169,6 +169,7 @@ def play(PlayFlag):
         csvCounter += 1
 
     song = f'C:/Users/ahmed/MusicPlayer-remade/Songs/{song}.mp3'
+
 
     pygame.mixer.music.load(song)
     pygame.mixer.music.play(loops=0)
@@ -314,7 +315,13 @@ def add_custom_to_list(custom, character_number):
 
 def customize(is_paused, helperFlag):
     # flag checks if song is playing
-    start_time= time.time()
+    exists_predecessor = False
+    most_recent_command="000"
+    if len(customization_list) !=0:
+        most_recent_customization = customization_list[-1]
+        most_recent_command = most_recent_customization.get_command()
+        exists_predecessor=True
+
 
     global Flag
     Flag = helperFlag
@@ -386,7 +393,7 @@ def customize(is_paused, helperFlag):
                         helpVar += 1
                         button_counter += 1
 
-                    if not exists:
+                    elif not exists and not exists_predecessor:
                         custom = Customization(character_counter, current_time,
                                                "0000000000000000000000000000000000000000000000000000000000000000")
                         character_counter += 1
@@ -397,9 +404,35 @@ def customize(is_paused, helperFlag):
                         save_button.grid(row=2, column=3, padx=10)
                         helpVar += 1
                         button_counter += 1
-    time_taken = time.time()-start_time
+                    elif not exists and exists_predecessor:
 
-    print("time taken to launch buttons", time_taken)
+                        custom = Customization(character_counter, current_time,
+                                               most_recent_command)
+                        character_counter += 1
+
+
+
+                        button = Button(frames[i], text="LED# " + str(button_counter) + "@" + str(i + 1), command=lambda helpVar=helpVar, i=i: [alter_bit_order(custom, helpVar, i)])
+
+                        chunk_size = 8
+                        bit_chunks_customization = [most_recent_command[i:i + chunk_size] for i in
+                                                    range(0, len(most_recent_command), chunk_size)]
+                        current_command = bit_chunks_customization[i]
+
+                        res = light_helper(current_command, row, col)
+                        index_to_light = res[0]
+
+                        if "1" in current_command:
+                            for index in range(len(index_to_light)):
+                                if index_to_light[index] == button_counter - 1:
+                                    button.config(bg="yellow")
+
+                        button.grid(row=row, column=col, padx=5, pady=5)
+                        save_button = Button(frames[i], text="save", command=lambda i=i: add_custom_to_list(custom, i))
+                        save_button.grid(row=2, column=3, padx=10)
+                        helpVar += 1
+                        button_counter += 1
+
 
         # confirm_button = Button(root, text="confirm ")
         # confirm_button.place(x=800,y=200)
@@ -410,7 +443,7 @@ def customize(is_paused, helperFlag):
 
 
 
-my_slider = ttk.Scale(root,from_=0,to=100,orient=HORIZONTAL,value=0,command=slide,length=360)
+my_slider = ttk.Scale(root,from_=0,to=100,orient=HORIZONTAL,value=0,command=slide,length=360,state='disabled')
 my_slider.place(x=345,y=430)
 
 slider_label = Label(root,text = "0")
