@@ -114,22 +114,21 @@ def play_time():
     minutes, seconds = divmod(song_length, 60)
     seconds, milliseconds = divmod(seconds, 1)
     converted_SongLen = f'{int(minutes):02}:{int(seconds):02}.{int(milliseconds * 1000):03}'
-    print("my slider = ",round(my_slider.get()+0.05,1))
-    print("song length =",round(song_length,1))
+
 
     if not paused:
         if round(my_slider.get() + 0.05, 1) == round(song_length, 1):
             statusBar.config(text=f'Time Elapsed: {converted_SongLen}')
 
         elif round(my_slider.get() + 0.05, 1) == round(current_time, 1):
-            print("not changed")
+            #slider didnt change on command
             slider_position = song_length
 
             my_slider.config(to=slider_position, value=current_time)
             statusBar.config(text=f'Time Elapsed: {converted_currentTime} of {converted_SongLen}')
 
         else:
-            print("changed")
+            #slider changed position
 
             slider_position = song_length
             my_slider.config(to=slider_position, value=my_slider.get())
@@ -206,6 +205,7 @@ def Restart(is_paused, helperFlag):
 
     global Flag
     Flag = helperFlag
+    my_slider.config(value=0)
     play(Flag)
 
 
