@@ -12,6 +12,41 @@ from customization import Customization
 from tkinter import messagebox
 
 
+class Customization:
+    _timestamp = 0
+    command = "0000000000000000000000000000000000000000000000000000000000000000"
+    character_num = 0
+
+
+
+    def __init__(self,character_num, _timestamp,command):
+        self._timestamp = _timestamp
+        self.command = command
+        self.character_num=character_num
+
+
+    def print_data(self):
+        list = [ self.command, self._timestamp,self.character_num]
+        return list
+
+    def get_timestamp(self):
+        return self._timestamp
+
+
+
+    def get_command(self):
+        return self.command
+
+    def set_command(self,new_command):
+        self.command = new_command
+    def get_character_num(self):
+        return self.character_num
+    def set_character_num(self,character_num):
+        self.character_num=character_num
+
+
+
+
 customization_list = []
 
 root = Tk()
@@ -32,6 +67,7 @@ my_menu = Menu(root)
 root.config(menu=my_menu)
 Song_menu = Menu(my_menu)
 my_menu.add_cascade(label="Add songs!!", menu=Song_menu)
+
 
 
 
@@ -94,7 +130,7 @@ def play_time():
     # Get Elapsed time
 
     current_time = pygame.mixer.music.get_pos() / 1000
-
+    #current time mohem gedan when iterating over the list, it is the time that gets saved in the timestamp
     slider_label.config(text=f'Slider: {(my_slider.get()-0.05)} and Song Pos: {(current_time)}')
     current_time += 0.05  # Add 50 milliseconds (0.05 seconds)
 
@@ -181,7 +217,7 @@ def play(PlayFlag):
         play_time()
         playButton.config(bg='cyan')
     except:
-        messagebox.showerror(title = "Song missing", message="Please choose a song")
+        messagebox.showerror(title = "Song missing", message="Please add a song")
 
 
 
