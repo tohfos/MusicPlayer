@@ -48,6 +48,7 @@ class Customization:
 
 
 customization_list = []
+stored_timestamps=[]
 
 root = Tk()
 root.title('LED-Pattern')
@@ -56,6 +57,7 @@ root.geometry("1000x550")
 root.resizable(False, False)
 
 pygame.mixer.init()
+
 global paused
 paused = False
 global Flag
@@ -101,7 +103,7 @@ def helper(helperFlag):
 
 
 ControlFrame = Frame(root)
-ControlFrame.place(x=310, y=470)
+ControlFrame.place(x=360, y=470)
 playButton = Button(ControlFrame, text="Play", font=("Helvetica", 16), command=lambda: helper(Flag))
 statusBar = Label(root, text='', bd=1, relief=GROOVE, anchor=E)
 customizeButton = Button(ControlFrame, text="Customize!", command=lambda: customize(paused, Flag),
@@ -110,13 +112,13 @@ finish_button = Button(ControlFrame, text="Finish", font=("Helvetica", 16),
                        command=lambda: [create_and_saveCsv(csvCounter), root.destroy()])
 
 # playButton.place(x=300,y=450)
-playButton.grid(row=0, column=0)
-finish_button.grid(row=0, column=5)
+playButton.grid(row=0, column=1)
+finish_button.grid(row=0, column=4)
 
 pauseButton = Button(ControlFrame, text="Pause", command=lambda: pause(paused), font=("Helvetica", 16))
-pauseButton.grid(row=0, column=1)
-restartButton = Button(ControlFrame, text="Restart", command=lambda: Restart(paused, Flag), font=("Helvetica", 16))
-restartButton.grid(row=0, column=2)
+pauseButton.grid(row=0, column=2)
+#restartButton = Button(ControlFrame, text="Restart", command=lambda: Restart(paused, Flag), font=("Helvetica", 16))
+#restartButton.grid(row=0, column=2)
 
 customizeButton.grid(row=0, column=3)
 
@@ -125,12 +127,22 @@ customizeButton.grid(row=0, column=3)
 
 statusBar.pack(fill=X, side=BOTTOM, ipady=2)
 
+def display_stored(timestamp):
+    command=fetch_command(0,timestamp)
 
 def play_time():
     # Get Elapsed time
 
+
+
     current_time = pygame.mixer.music.get_pos() / 1000
     #current time mohem gedan when iterating over the list, it is the time that gets saved in the timestamp
+
+
+
+
+
+
     slider_label.config(text=f'Slider: {(my_slider.get()-0.05)} and Song Pos: {(current_time)}')
     current_time += 0.05  # Add 50 milliseconds (0.05 seconds)
 
@@ -196,10 +208,14 @@ def play_time():
 
 
 def play(PlayFlag):
+
     global csvCounter
     csvCounters = csvCounter
     global Flag
     Flag = PlayFlag
+    if PlayFlag:
+        return
+
     song = song_box.get(ACTIVE)
     if csvCounters == 0:
         read_csv_and_add_to_list(song)
@@ -235,11 +251,11 @@ def pause(is_paused):
         global paused
         paused = is_paused
         if paused:
-            pauseButton.config(text="pause")
+            pauseButton.config(text="Pause")
             pygame.mixer.music.unpause()
             paused = False
         elif not paused:
-            pauseButton.config(text="resume")
+            pauseButton.config(text="Resume")
             pygame.mixer.music.pause()
             paused = True
 
@@ -249,7 +265,7 @@ def Restart(is_paused, helperFlag):
     paused = is_paused
     pygame.mixer.music.stop()
     if paused:
-        pauseButton.config(text="pause")
+        pauseButton.config(text="Pause")
         paused = False
 
     global Flag
@@ -282,7 +298,7 @@ def fetch_command_for_character(index, timestamp):
 def fetch_command(index, timestamp):
     for i in range(len(customization_list)):
 
-        if customization_list[i].get_timestamp() == timestamp and customization_list[i].get_character_num() == index:
+        if customization_list[i].get_timestamp() == timestamp :
             command = customization_list[i].get_command()
 
             return command
@@ -335,6 +351,7 @@ def add_custom_to_list(custom, character_number):
 
     if len(customization_list) == 0:
         customization_list.append(custom)
+        stored_timestamps.append(custom.get_timestamp())
         return
     else:
         for customization in customization_list:
@@ -342,11 +359,9 @@ def add_custom_to_list(custom, character_number):
                 customization_command_string = customization.get_command()
                 custom_command_string = custom.get_command()
                 chunk_size = 8
-                bit_chunks_customization = [customization_command_string[i:i + chunk_size] for i in
-                                            range(0, len(customization_command_string), chunk_size)]
+                bit_chunks_customization = [customization_command_string[i:i + chunk_size] for i in range(0, len(customization_command_string), chunk_size)]
                 print("customization in list ", bit_chunks_customization)
-                bit_chunks_custom = [custom_command_string[i:i + chunk_size] for i in
-                                     range(0, len(custom_command_string), chunk_size)]
+                bit_chunks_custom = [custom_command_string[i:i + chunk_size] for i in range(0, len(custom_command_string), chunk_size)]
                 print("custom in list ", bit_chunks_custom)
                 new_bits = bit_chunks_custom[character_number]
                 bit_chunks_customization[character_number] = new_bits
@@ -356,6 +371,7 @@ def add_custom_to_list(custom, character_number):
                 return
 
         customization_list.append(custom)
+        stored_timestamps.append(custom.get_timestamp())
     for customizable in range(len(customization_list)):
         print("customizable ", customization_list[customizable].print_data())
     print("customization list has" + str(len(customization_list)) + " elements")
