@@ -127,11 +127,86 @@ customizeButton.grid(row=0, column=3)
 
 statusBar.pack(fill=X, side=BOTTOM, ipady=2)
 
-def display_stored(timestamp):
-    command=fetch_command(0,timestamp)
+def show_Leds(command):
+        current_time = pygame.mixer_music.get_pos() / 1000
+
+        frame_grid = Frame(root)
+        frame_grid.place(x=0, y=80)
+        frames = []
+        command_list = []
+        for i in range(8):
+            frame = Frame(frame_grid)
+            frame.grid(row=i // 4, column=i % 4, padx=20, pady=10)
+
+            frames.append(frame)
+
+        # Create buttons in each frame labeled from 1 to 8
+        previous_flag = False
+        for i in range(8):
+            button_counter = 1
+            helpVar = 0
+
+            exists = fetch_customization(i, current_time)
+
+
+            for row in range(4):
+                for col in range(2):
+
+                    if exists:
+                        custom = exists
+
+                        custom.set_command(exists.get_command())
+
+                        #save_button = Button(frames[i], text="save", command=lambda i=i: add_custom_to_list(custom, i))
+                        #save_button.grid(row=2, column=3, padx=10)
+
+                        button = Button(frames[i], text="LED# " + str(button_counter) + "@" + str(i + 1),
+                                        command=lambda helpVar=helpVar, i=i: [alter_bit_order(custom, helpVar, i)])
+
+
+                        customization_command_string = command
+                        chunk_size = 8
+                        bit_chunks_customization = [customization_command_string[i:i + chunk_size] for i in
+                                                    range(0, len(customization_command_string), chunk_size)]
+                        current_command = bit_chunks_customization[i]
+
+                        res = light_helper(current_command, row, col)
+
+                        index_to_light = res[0]
+
+                        if "1" in current_command:
+                            for index in range(len(index_to_light)):
+                                if index_to_light[index] == button_counter - 1:
+                                    button.config(bg="yellow")
+
+                        button.grid(row=row, column=col, padx=5, pady=5)
+
+                        helpVar += 1
+                        button_counter += 1
+
+
+
+def display_stored():
+    current_time = pygame.mixer_music.get_pos()/1000
+    for i in range(len(stored_timestamps)):
+        if current_time==stored_timestamps[i]:
+            return fetch_command(stored_timestamps[i])
+
+    return
+
+
 
 def play_time():
+
     # Get Elapsed time
+    customization_mal2oot = False
+    if not paused:
+        there_is_command_to_display_now = display_stored()
+        print(there_is_command_to_display_now)
+        if there_is_command_to_display_now:
+            command = there_is_command_to_display_now
+            show_Leds(command)
+
 
 
 
@@ -252,10 +327,14 @@ def pause(is_paused):
         paused = is_paused
         if paused:
             pauseButton.config(text="Pause")
+            my_slider.config(state="enabled")
             pygame.mixer.music.unpause()
+
             paused = False
         elif not paused:
             pauseButton.config(text="Resume")
+            my_slider.config(state="disabled")
+
             pygame.mixer.music.pause()
             paused = True
 
@@ -295,7 +374,7 @@ def fetch_command_for_character(index, timestamp):
     return False
 
 
-def fetch_command(index, timestamp):
+def fetch_command(timestamp,index=0):
     for i in range(len(customization_list)):
 
         if customization_list[i].get_timestamp() == timestamp :
@@ -332,13 +411,17 @@ def alter_bit_order(custom, bit_to_be_changed, index):
     new_command = "".join(bit_chunks)
     print("new commadn ", new_command)
     custom.set_command(new_command)
+    add_custom_to_list(custom,index)
+    customize(paused, Flag,new_command)
 
 
 def light_helper(command, row, column):
     indexes_to_light_up = []
+    print("commmand that entered light helper = ",command)
     location_of_button = [row, column]
     res = []
     for i in range(8):
+
         if command[i] == '1':
             indexes_to_light_up.append(i)
     res = [indexes_to_light_up, location_of_button]
@@ -377,7 +460,7 @@ def add_custom_to_list(custom, character_number):
     print("customization list has" + str(len(customization_list)) + " elements")
 
 
-def customize(is_paused, helperFlag):
+def customize(is_paused, helperFlag,new_command="0000000000000000000000000000000000000000000000000000000000000000"):
     # flag checks if song is playing
     exists_predecessor = False
     most_recent_command="000"
@@ -396,6 +479,7 @@ def customize(is_paused, helperFlag):
 
         if not paused:
             pause(paused)
+
         current_time = pygame.mixer.music.get_pos() / 1000
         #current_time += 0.05  # Add 50 milliseconds (0.05 seconds)
 
@@ -431,8 +515,8 @@ def customize(is_paused, helperFlag):
 
                         custom.set_command(exists.get_command())
 
-                        save_button = Button(frames[i], text="save", command=lambda i=i: add_custom_to_list(custom, i))
-                        save_button.grid(row=2, column=3, padx=10)
+                        #save_button = Button(frames[i], text="save", command=lambda i=i: add_custom_to_list(custom, i))
+                        #save_button.grid(row=2, column=3, padx=10)
 
                         button = Button(frames[i], text="LED# " + str(button_counter) + "@" + str(i + 1),
                                         command=lambda helpVar=helpVar, i=i: [alter_bit_order(custom, helpVar, i)])
@@ -445,6 +529,7 @@ def customize(is_paused, helperFlag):
                         current_command = bit_chunks_customization[i]
 
                         res = light_helper(current_command, row, col)
+
                         index_to_light = res[0]
 
                         if "1" in current_command:
@@ -458,14 +543,19 @@ def customize(is_paused, helperFlag):
                         button_counter += 1
 
                     elif not exists and not exists_predecessor:
+                        print("entered")
+
                         custom = Customization(character_counter, current_time,
-                                               "0000000000000000000000000000000000000000000000000000000000000000")
+                                                   new_command)
+
+
+
                         character_counter += 1
 
                         button = Button(frames[i], text="LED# " + str(button_counter) + "@" + str(i + 1), command=lambda helpVar=helpVar, i=i: [alter_bit_order(custom, helpVar, i)])
                         button.grid(row=row, column=col, padx=5, pady=5)
-                        save_button = Button(frames[i], text="save", command=lambda i=i: add_custom_to_list(custom, i))
-                        save_button.grid(row=2, column=3, padx=10)
+                        #save_button = Button(frames[i], text="save", command=lambda i=i: add_custom_to_list(custom, i))
+                        #save_button.grid(row=2, column=3, padx=10)
                         helpVar += 1
                         button_counter += 1
                     elif not exists and exists_predecessor:
@@ -492,17 +582,12 @@ def customize(is_paused, helperFlag):
                                     button.config(bg="yellow")
 
                         button.grid(row=row, column=col, padx=5, pady=5)
-                        save_button = Button(frames[i], text="save", command=lambda i=i: add_custom_to_list(custom, i))
-                        save_button.grid(row=2, column=3, padx=10)
+                        #save_button = Button(frames[i], text="save", command=lambda i=i: add_custom_to_list(custom, i))
+                        #save_button.grid(row=2, column=3, padx=10)
                         helpVar += 1
                         button_counter += 1
 
 
-        # confirm_button = Button(root, text="confirm ")
-        # confirm_button.place(x=800,y=200)
-
-        # Convert to formatted string
-        # converted_currentTime = f'{int(minutes):02}:{int(seconds):02}.{int(milliseconds * 1000):03}'
 
 
 
