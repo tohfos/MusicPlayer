@@ -112,12 +112,12 @@ finish_button = Button(ControlFrame, text="Finish", font=("Helvetica", 16),
 
 # playButton.place(x=300,y=450)
 playButton.grid(row=0, column=1)
-finish_button.grid(row=0, column=4)
+finish_button.grid(row=0, column=5)
 
 pauseButton = Button(ControlFrame, text="Pause", command=lambda: pause(paused), font=("Helvetica", 16))
 pauseButton.grid(row=0, column=2)
 restartButton = Button(ControlFrame, text="Restart", command=lambda: Restart(paused, Flag), font=("Helvetica", 16))
-restartButton.grid(row=0, column=5)
+restartButton.grid(row=0, column=4)
 
 customizeButton.grid(row=0, column=3)
 
@@ -195,7 +195,7 @@ def play_time():
 
     # current time mohem gedan when iterating over the list, it is the time that gets saved in the timestamp
 
-    slider_label.config(text=f'Slider: {(my_slider.get() - 0.05)} and Song Pos: {(current_time)}')
+    #slider_label.config(text=f'Slider: {(my_slider.get() - 0.05)} and Song Pos: {(current_time)}')
 
     current_time += 0.05  # Add 50 milliseconds (0.05 seconds)
 
@@ -574,8 +574,7 @@ def customize(is_paused, helperFlag, new_command="000000000000000000000000000000
                                     button.config(bg="yellow")
 
                         button.grid(row=row, column=col, padx=5, pady=5)
-                        # save_button = Button(frames[i], text="save", command=lambda i=i: add_custom_to_list(custom, i))
-                        # save_button.grid(row=2, column=3, padx=10)
+
                         helpVar += 1
                         button_counter += 1
 
@@ -583,6 +582,5 @@ def customize(is_paused, helperFlag, new_command="000000000000000000000000000000
 my_slider = ttk.Scale(root, from_=0, to=100, orient=HORIZONTAL, value=0, command=slide, length=360, state='disabled')
 my_slider.place(x=345, y=430)
 
-slider_label = Label(root, text="0")
-slider_label.pack(pady=10)
+
 root.mainloop()
