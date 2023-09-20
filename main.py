@@ -78,7 +78,9 @@ def read_csv_and_add_to_list(song_name):
     else:
         with open(csv_filepath, 'r') as csv_filepath:
             csv_reader = csv.reader(csv_filepath)
-
+            for row in csv_reader:
+                custom = Customization(0,float(row[1]),row[0])
+                customization_list.append(custom)
 
 def add_song():
     song = filedialog.askopenfilename(initialdir='Songs', title="Choose a song", filetypes=(("mp3 Files", "*.mp3"),))
@@ -261,6 +263,8 @@ def play(PlayFlag, Restart_Flag=""):
     # show_Leds("0000000000000000000000000000000000000000000000000000000000000000")
     song = song_box.get(ACTIVE)
     song = f'C:/Users/ahmed/MusicPlayer-remade/Songs/{song}.mp3'
+    read_csv_and_add_to_list(song)
+
     global csvCounter
     csvCounters = csvCounter
     global Flag
@@ -284,15 +288,29 @@ def play(PlayFlag, Restart_Flag=""):
         except:
             messagebox.showerror(title="Song missing", message="Please add a song")
 
-    if csvCounters == 0:
-        read_csv_and_add_to_list(song)
-        csvCounter += 1
+
+    csvCounter += 1
 
     # slider_position = int(song_length)
     # my_slider.config(to=slider_position,value=0)
 
 
+def create_and_saveCsv(csvCount):
+    global csvCounter
+    csvCount=csvCounter
+    list_of_data = []
+    csvCounter+=1
+    for custom in customization_list:
+        data=[]
+        data.append(custom.get_command())
+        data.append(custom.get_timestamp())
 
+        list_of_data.append(data)
+
+    with open(r"C:\Users\ahmed\MusicPlayer-remade\commands\routine",mode='w',newline='') as csv_file:
+        writer = csv.writer(csv_file)
+        for row in list_of_data:
+            writer.writerow(row)
 def pause(is_paused):
     # TODO obtain timestamps when paused
 
