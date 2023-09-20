@@ -102,7 +102,7 @@ def helper(helperFlag):
 
 
 ControlFrame = Frame(root)
-ControlFrame.place(x=360, y=470)
+ControlFrame.place(x=320, y=470)
 playButton = Button(ControlFrame, text="Play", font=("Helvetica", 16), command=lambda: helper(Flag))
 statusBar = Label(root, text='', bd=1, relief=GROOVE, anchor=E)
 customizeButton = Button(ControlFrame, text="Customize!", command=lambda: customize(paused, Flag),
