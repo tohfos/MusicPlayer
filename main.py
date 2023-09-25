@@ -92,15 +92,17 @@ def read_csv_and_add_to_list(routine_name):
 
 def add_song():
     song = filedialog.askopenfilename(initialdir='Songs', title="Choose a song", filetypes=(("mp3 Files", "*.mp3"),))
+    print("song",song)
     song = song.replace(r"C:/Users/ahmed/MusicPlayer-remade/Songs/", "")
     song = song.replace(".mp3", "")
     song_box.insert(END, song)
 
 def add_routine():
     routine = filedialog.askopenfilename(initialdir='commands', title="Choose a routine")
-    read_csv_and_add_to_list(routine)
-    global file_flag
-    file_flag = True
+    if routine:
+        read_csv_and_add_to_list(routine)
+        global file_flag
+        file_flag = True
 
 
 Song_menu.add_command(label="Add Song", command=add_song)
@@ -166,7 +168,8 @@ def show_Leds(command):
         for row in range(4):
             for col in range(2):
 
-                button = Button(frames[i], text="LED# " + str(button_counter) + "@" + str(i + 1))
+
+                button = Button(frames[i], text="LED# " + str(button_counter) + "@" + str(i + 1),command=lambda helpVar=helpVar, i=i: [alter_bit_order(custom, helpVar, i)])
 
                 customization_command_string = command
                 chunk_size = 8
@@ -270,6 +273,11 @@ def play_time():
             my_slider.config(value=next_time)
             if my_slider.get() == 0.0:
                 pygame.mixer.music.set_pos(0)
+            for customization in customization_list:
+                if round(customization.get_timestamp(), 3) == round(my_slider.get(), 3):
+                    show_Leds(customization.get_command())
+
+                    # print("showing leds at", round(my_slider.get(), 2))
 
                 # time.sleep(0.5)
 
@@ -285,7 +293,7 @@ def play_time():
 def play(PlayFlag, Restart_Flag=""):
     # show_Leds("0000000000000000000000000000000000000000000000000000000000000000")
     song = song_box.get(ACTIVE)
-    song = f'C:/Users/ahmed/MusicPlayer-remade/Songs/{song}.mp3'
+    song = f'Songs/{song}.mp3'
     #read_csv_and_add_to_list(song)
 
     global csvCounter
@@ -357,28 +365,29 @@ def create_and_saveCsv(csvCount):
 def pause(is_paused):
     # TODO obtain timestamps when paused
 
-    if Flag:
-        global paused
-        paused = is_paused
-        if paused:
-            pauseButton.config(text="Pause")
-            my_slider.config(state="enabled")
-            pygame.mixer.music.unpause()
-
-            paused = False
-        elif not paused:
-            pauseButton.config(text="Resume")
-            my_slider.config(state="disabled")
-
-            pygame.mixer.music.pause()
-            paused = True
+    global paused
+    paused = is_paused
+    if paused:
+        pauseButton.config(text="Pause")
+        my_slider.config(state="enabled")
+        pygame.mixer.music.unpause()
+        paused = False
+        return
+    elif not paused:
+        pauseButton.config(text="Resume")
+        my_slider.config(state="disabled")
+        pygame.mixer.music.pause()
+        paused = True
+        return
 
 
 def Restart(is_paused, helperFlag):
-    #print("restart clicked")
+    print("restart clicked")
+
     global paused
     paused = is_paused
-    paused=False
+    if paused:
+        pause(paused)
 
     global Flag
     Flag = helperFlag
@@ -499,12 +508,18 @@ def add_custom_to_list(custom, character_number):
 
 def customize(is_paused, helperFlag, new_command="0000000000000000000000000000000000000000000000000000000000000000"):
     # flag checks if song is playing
+
+
+
+
+
     exists_predecessor = False
     most_recent_command = "000"
     if len(customization_list) != 0:
         most_recent_customization = customization_list[-1]
         most_recent_command = most_recent_customization.get_command()
         exists_predecessor = True
+
 
     global Flag
     Flag = helperFlag
