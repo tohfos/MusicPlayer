@@ -1,6 +1,5 @@
 import time
 import threading
-
 from tkinter import *
 # from PIL import Image, ImageTk
 from queue import Queue
@@ -10,9 +9,10 @@ import csv
 import os
 import tkinter.ttk as ttk
 import concurrent.futures
-from tkinter import filedialog
+from tkinter import filedialog, simpledialog
 from customization import Customization
 from tkinter import messagebox
+
 
 
 class Customization:
@@ -56,7 +56,10 @@ root.geometry("1000x550")
 root.resizable(False, False)
 
 pygame.mixer.init()
-
+global file_paths
+file_paths = ""
+global file_flag
+file_flag = False
 global paused
 paused = False
 global Flag
@@ -67,11 +70,16 @@ csvCounter = 0
 my_menu = Menu(root)
 root.config(menu=my_menu)
 Song_menu = Menu(my_menu)
+Routine_menu = Menu(my_menu)
+
 my_menu.add_cascade(label="Add songs!!", menu=Song_menu)
+my_menu.add_cascade(label = "Select routine",menu= Routine_menu)
 
 
-def read_csv_and_add_to_list(song_name):
-    csv_filepath = 'commands/routine'
+def read_csv_and_add_to_list(routine_name):
+    csv_filepath = routine_name
+    global file_paths
+    file_paths = routine_name
 
     if not os.path.exists(csv_filepath):
         return False
@@ -88,8 +96,16 @@ def add_song():
     song = song.replace(".mp3", "")
     song_box.insert(END, song)
 
+def add_routine():
+    routine = filedialog.askopenfilename(initialdir='commands', title="Choose a routine")
+    read_csv_and_add_to_list(routine)
+    global file_flag
+    file_flag = True
+
 
 Song_menu.add_command(label="Add Song", command=add_song)
+Routine_menu.add_command(label="select routine",command = add_routine)
+
 
 song_box = Listbox(root, bg="white", fg="black", width=60, height=2)
 song_box.place(x=0, y=0)
@@ -128,7 +144,7 @@ statusBar.pack(fill=X, side=BOTTOM, ipady=2)
 
 
 def show_Leds(command):
-    print("entered show leds")
+    #print("entered show leds")
     current_time = pygame.mixer_music.get_pos() / 1000
 
     frame_grid = Frame(root)
@@ -176,18 +192,25 @@ def show_Leds(command):
 
 def play_time():
     # Get Elapsed time
-    print("current song postion ", pygame.mixer.music.get_pos())
+    print("file_flag",file_paths)
+    #print("current song postion ", pygame.mixer.music.get_pos())
     current_time = pygame.mixer.music.get_pos() / 1000
-    print("current time", current_time)
-    print("slider val ", my_slider.get())
+    #print("current time", current_time)
+    #print("slider val ", my_slider.get())
     if my_slider.get() == 0:
         show_Leds("0000000000000000000000000000000000000000000000000000000000000000")
+        #dah bey detect lama restart y7sl fa hena you initialize ely da5el lel arduino be all 0's
+
 
     if not paused:
         for customization in customization_list:
             if round(customization.get_timestamp(),3) == round(my_slider.get(),3):
                 #print("showing leds at", round(my_slider.get(), 2))
                 show_Leds(customization.get_command())
+                #hena arduino
+                #check fo2 for another comment
+                command_to_send_to_arduino= customization.get_command() # dah feeh el 64 bits ely bybano fel interface , just send them to the arduino
+
 
 
                 #time.sleep(0.3)
@@ -263,7 +286,7 @@ def play(PlayFlag, Restart_Flag=""):
     # show_Leds("0000000000000000000000000000000000000000000000000000000000000000")
     song = song_box.get(ACTIVE)
     song = f'C:/Users/ahmed/MusicPlayer-remade/Songs/{song}.mp3'
-    read_csv_and_add_to_list(song)
+    #read_csv_and_add_to_list(song)
 
     global csvCounter
     csvCounters = csvCounter
@@ -284,7 +307,7 @@ def play(PlayFlag, Restart_Flag=""):
             if not PlayFlag:
                 play_time()
 
-            playButton.config(bg='cyan')
+            playButton.config(bg='cyan',state='disabled')
         except:
             messagebox.showerror(title="Song missing", message="Please add a song")
 
@@ -294,23 +317,43 @@ def play(PlayFlag, Restart_Flag=""):
     # slider_position = int(song_length)
     # my_slider.config(to=slider_position,value=0)
 
+def alter_in_existing_file():
 
-def create_and_saveCsv(csvCount):
-    global csvCounter
-    csvCount=csvCounter
     list_of_data = []
-    csvCounter+=1
     for custom in customization_list:
-        data=[]
+        data = []
         data.append(custom.get_command())
         data.append(custom.get_timestamp())
 
         list_of_data.append(data)
 
-    with open(r"C:\Users\ahmed\MusicPlayer-remade\commands\routine",mode='w',newline='') as csv_file:
+    with open(file_paths, mode='w', newline='') as csv_file:
         writer = csv.writer(csv_file)
         for row in list_of_data:
             writer.writerow(row)
+
+
+def create_and_saveCsv(csvCount):
+    if file_flag:
+        return alter_in_existing_file()
+    user_input = simpledialog.askstring("Save Routine", "Enter routine name")
+    if user_input:
+        os.makedirs("commands",exist_ok=True)
+        csv_filename = f"commands/{user_input}"
+        list_of_data = []
+        for custom in customization_list:
+            data = []
+            data.append(custom.get_command())
+            data.append(custom.get_timestamp())
+
+            list_of_data.append(data)
+
+        with open(csv_filename, mode='w', newline='') as csv_file:
+            writer = csv.writer(csv_file)
+            for row in list_of_data:
+                writer.writerow(row)
+
+
 def pause(is_paused):
     # TODO obtain timestamps when paused
 
@@ -332,7 +375,7 @@ def pause(is_paused):
 
 
 def Restart(is_paused, helperFlag):
-    print("restart clicked")
+    #print("restart clicked")
     global paused
     paused = is_paused
     paused=False
@@ -434,11 +477,9 @@ def add_custom_to_list(custom, character_number):
                 customization_command_string = customization.get_command()
                 custom_command_string = custom.get_command()
                 chunk_size = 8
-                bit_chunks_customization = [customization_command_string[i:i + chunk_size] for i in
-                                            range(0, len(customization_command_string), chunk_size)]
+                bit_chunks_customization = [customization_command_string[i:i + chunk_size] for i in range(0, len(customization_command_string), chunk_size)]
                 # print("customization in list ", bit_chunks_customization)
-                bit_chunks_custom = [custom_command_string[i:i + chunk_size] for i in
-                                     range(0, len(custom_command_string), chunk_size)]
+                bit_chunks_custom = [custom_command_string[i:i + chunk_size] for i in range(0, len(custom_command_string), chunk_size)]
                 # print("custom in list ", bit_chunks_custom)
                 new_bits = bit_chunks_custom[character_number]
                 bit_chunks_customization[character_number] = new_bits
@@ -537,9 +578,9 @@ def customize(is_paused, helperFlag, new_command="000000000000000000000000000000
                         button_counter += 1
 
                     elif not exists and not exists_predecessor:
-                        print("entered")
+                       # print("entered")
 
-                        custom = Customization(character_counter, round(my_slider.get()*2)/2,
+                        custom = Customization(character_counter, round(my_slider.get()*20)/20,
                                                new_command)
 
                         character_counter += 1
@@ -553,7 +594,7 @@ def customize(is_paused, helperFlag, new_command="000000000000000000000000000000
                         button_counter += 1
                     elif not exists and exists_predecessor:
 
-                        custom = Customization(character_counter, round(my_slider.get()*2)/2,
+                        custom = Customization(character_counter, round(my_slider.get()*20)/20,
                                                most_recent_command)
                         character_counter += 1
 
