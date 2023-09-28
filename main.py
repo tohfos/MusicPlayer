@@ -93,9 +93,10 @@ def read_csv_and_add_to_list(routine_name):
 def add_song():
     song = filedialog.askopenfilename(initialdir='Songs', title="Choose a song", filetypes=(("mp3 Files", "*.mp3"),))
     print("song",song)
-    song = song.replace(r"C:/Users/ahmed/MusicPlayer-remade/Songs/", "")
-    song = song.replace(".mp3", "")
+    #song = song.replace(r"C:/Users/ahmed/MusicPlayer-remade/Songs/", "")
+    #song = song.replace(".mp3", "")
     song_box.insert(END, song)
+
 
 def add_routine():
     routine = filedialog.askopenfilename(initialdir='commands', title="Choose a routine")
@@ -145,57 +146,99 @@ customizeButton.grid(row=0, column=3)
 statusBar.pack(fill=X, side=BOTTOM, ipady=2)
 
 
-def show_Leds(command):
-    #print("entered show leds")
+def show_Leds(command,custom=-1):
+    print("entered show leds")
     current_time = pygame.mixer_music.get_pos() / 1000
+    if custom != -1:
+        frame_grid = Frame(root)
+        frame_grid.place(x=100, y=80)
+        frames = []
+        command_list = []
+        for i in range(8):
+            frame = Frame(frame_grid)
+            frame.grid(row=i // 4, column=i % 4, padx=20, pady=10)
 
-    frame_grid = Frame(root)
-    frame_grid.place(x=100, y=80)
-    frames = []
-    command_list = []
-    for i in range(8):
-        frame = Frame(frame_grid)
-        frame.grid(row=i // 4, column=i % 4, padx=20, pady=10)
+            frames.append(frame)
 
-        frames.append(frame)
+        # Create buttons in each frame labeled from 1 to 8
+        previous_flag = False
+        for i in range(8):
+            button_counter = 1
+            helpVar = 0
 
-    # Create buttons in each frame labeled from 1 to 8
-    previous_flag = False
-    for i in range(8):
-        button_counter = 1
-        helpVar = 0
+            for row in range(4):
+                for col in range(2):
 
-        for row in range(4):
-            for col in range(2):
+                    button = Button(frames[i], text="LED# " + str(button_counter) + "@" + str(i + 1),
+                                    command=lambda helpVar=helpVar, i=i: [alter_bit_order(customization_list[custom], helpVar, i,"editing")])
 
+                    customization_command_string = command
+                    chunk_size = 8
+                    bit_chunks_customization = [customization_command_string[i:i + chunk_size] for i in
+                                                range(0, len(customization_command_string), chunk_size)]
+                    current_command = bit_chunks_customization[i]
 
-                button = Button(frames[i], text="LED# " + str(button_counter) + "@" + str(i + 1),command=lambda helpVar=helpVar, i=i: [alter_bit_order(custom, helpVar, i)])
+                    res = light_helper(current_command, row, col)
 
-                customization_command_string = command
-                chunk_size = 8
-                bit_chunks_customization = [customization_command_string[i:i + chunk_size] for i in
-                                            range(0, len(customization_command_string), chunk_size)]
-                current_command = bit_chunks_customization[i]
+                    index_to_light = res[0]
 
-                res = light_helper(current_command, row, col)
+                    if "1" in current_command:
+                        for index in range(len(index_to_light)):
+                            if index_to_light[index] == button_counter - 1:
+                                button.config(bg="yellow")
 
-                index_to_light = res[0]
+                    button.grid(row=row, column=col, padx=5, pady=5)
 
-                if "1" in current_command:
-                    for index in range(len(index_to_light)):
-                        if index_to_light[index] == button_counter - 1:
-                            button.config(bg="yellow")
+                    helpVar += 1
+                    button_counter += 1
 
-                button.grid(row=row, column=col, padx=5, pady=5)
+    elif custom == -1:
+        frame_grid = Frame(root)
+        frame_grid.place(x=100, y=80)
+        frames = []
+        command_list = []
+        for i in range(8):
+            frame = Frame(frame_grid)
+            frame.grid(row=i // 4, column=i % 4, padx=20, pady=10)
 
-                helpVar += 1
-                button_counter += 1
-    return True
+            frames.append(frame)
+
+        # Create buttons in each frame labeled from 1 to 8
+        previous_flag = False
+        for i in range(8):
+            button_counter = 1
+            helpVar = 0
+
+            for row in range(4):
+                for col in range(2):
+
+                    button = Button(frames[i], text="LED# " + str(button_counter) + "@" + str(i + 1))
+
+                    customization_command_string = command
+                    chunk_size = 8
+                    bit_chunks_customization = [customization_command_string[i:i + chunk_size] for i in
+                                                range(0, len(customization_command_string), chunk_size)]
+                    current_command = bit_chunks_customization[i]
+
+                    res = light_helper(current_command, row, col)
+
+                    index_to_light = res[0]
+
+                    if "1" in current_command:
+                        for index in range(len(index_to_light)):
+                            if index_to_light[index] == button_counter - 1:
+                                button.config(bg="yellow")
+
+                    button.grid(row=row, column=col, padx=5, pady=5)
+
+                    helpVar += 1
+                    button_counter += 1
+        return True
 
 
 def play_time():
     # Get Elapsed time
-    print("file_flag",file_paths)
+    #print("file_flag",file_paths)
     #print("current song postion ", pygame.mixer.music.get_pos())
     current_time = pygame.mixer.music.get_pos() / 1000
     #print("current time", current_time)
@@ -209,6 +252,7 @@ def play_time():
         for customization in customization_list:
             if round(customization.get_timestamp(),3) == round(my_slider.get(),3):
                 #print("showing leds at", round(my_slider.get(), 2))
+                print("tag3")
                 show_Leds(customization.get_command())
                 #hena arduino
                 #check fo2 for another comment
@@ -233,8 +277,8 @@ def play_time():
 
     # Get the currently selected song
     song = song_box.get(ACTIVE)
-    song_path = f'C:/Users/ahmed/MusicPlayer-remade/Songs/{song}.mp3'
-    song_mut = MP3(song_path)
+    #song_path = f'C:/Users/ahmed/MusicPlayer-remade/Songs/{song}.mp3'
+    song_mut = MP3(song)
     global song_length
     song_length = song_mut.info.length
 
@@ -273,9 +317,10 @@ def play_time():
             my_slider.config(value=next_time)
             if my_slider.get() == 0.0:
                 pygame.mixer.music.set_pos(0)
-            for customization in customization_list:
-                if round(customization.get_timestamp(), 3) == round(my_slider.get(), 3):
-                    show_Leds(customization.get_command())
+            # for customization in customization_list:
+            #     if round(customization.get_timestamp(), 3) == round(my_slider.get(), 3):
+            #         print("tag2")
+            #         show_Leds(customization.get_command())
 
                     # print("showing leds at", round(my_slider.get(), 2))
 
@@ -293,7 +338,7 @@ def play_time():
 def play(PlayFlag, Restart_Flag=""):
     # show_Leds("0000000000000000000000000000000000000000000000000000000000000000")
     song = song_box.get(ACTIVE)
-    song = f'Songs/{song}.mp3'
+    #song = f'Songs/{song}.mp3'
     #read_csv_and_add_to_list(song)
 
     global csvCounter
@@ -401,7 +446,7 @@ def Restart(is_paused, helperFlag):
 def slide(x):
     # slider_label.config(text =f'{int(my_slider.get())} of {int(song_length)}' )
     song = song_box.get(ACTIVE)
-    song = f'C:/Users/ahmed/MusicPlayer-remade/Songs/{song}.mp3'
+    #song = f'C:/Users/ahmed/MusicPlayer-remade/Songs/{song}.mp3'
     pygame.mixer.music.load(song)
     pygame.mixer.music.play(loops=0, start=int(my_slider.get()))
 
@@ -438,8 +483,9 @@ def fetch_customization(index, timestamp):
     return False
 
 
-def alter_bit_order(custom, bit_to_be_changed, index):
+def alter_bit_order(custom, bit_to_be_changed, index,mode="normal"):
     # print("button altered at ", index)
+    print("currently altering",custom.print_data())
     command_string = custom.get_command()
     # print("**", command_string)
     chunk_size = 8
@@ -453,22 +499,34 @@ def alter_bit_order(custom, bit_to_be_changed, index):
     new_bits = "".join(original_bits)
     bit_chunks[index] = new_bits
     new_command = "".join(bit_chunks)
-    # print("new commadn ", new_command)
+    print("new commadn ", new_command)
     custom.set_command(new_command)
     add_custom_to_list(custom, index)
+    print("tag0")
     customize(paused, Flag, new_command)
 
 
-def light_helper(command, row, column):
+def light_helper(command, row=0, column=0,mode="normal"):
     indexes_to_light_up = []
+    indexes_to_darken =[]
     # print("commmand that entered light helper = ",command)
     location_of_button = [row, column]
     res = []
-    for i in range(8):
+    if mode == "normal":
+        for i in range(8):
 
-        if command[i] == '1':
-            indexes_to_light_up.append(i)
-    res = [indexes_to_light_up, location_of_button]
+            if command[i] == '1':
+                indexes_to_light_up.append(i)
+        res = [indexes_to_light_up, location_of_button]
+    if mode =="editing":
+        for i in range(64):
+
+            if command[i] == '1':
+                indexes_to_light_up.append(i)
+
+        res = [indexes_to_light_up, location_of_button]
+
+
     return res
 
 
@@ -500,36 +558,94 @@ def add_custom_to_list(custom, character_number):
         customization_list.append(custom)
         stored_timestamps.append(custom.get_timestamp())
         print("stored timestamps ", stored_timestamps)
+        customization_list.sort(key=lambda x: x._timestamp)
+    update_index = customization_list.index(custom)
+    update_list(update_index)
+
     if len(customization_list)!=0:
         for customs in customization_list:
             print("00000000  ",customs.print_data())
 
 
+def update_list(index):
+    print("update list index",index)
+    custom = customization_list[index]
+    helper = light_helper(custom.get_command(),0,0,"editing")
+    index_to_light_up = helper[0]
+    print("should add",index_to_light_up)
+    for customization in customization_list[index:]:
+        customization_command = customization.get_command()
+        command_listed = list(customization_command)
+        print("CL",command_listed)
+
+        for i in range (len(index_to_light_up)):
+            command_listed[index_to_light_up[i]] = '1'
+        new_command = ''.join(command_listed)
+        print("new Commmannnd",new_command)
+        customization.set_command(new_command)
+
+
+
+
+
 
 def customize(is_paused, helperFlag, new_command="0000000000000000000000000000000000000000000000000000000000000000"):
     # flag checks if song is playing
+    print("enterred customize")
+    global paused
+    paused = is_paused
+
+    if not paused:
+        pause(paused)
+    max_allowed_difference = 0.100  # 50 ms = 0.05 seconds
+
+    # nearest_index = max((i for i, item in enumerate(customization_list) if item.get_timestamp() >= round(my_slider.get(), 2) and (item.get_timestamp() - round(my_slider.get(), 2)) <= max_allowed_difference),default=None)
+    # if file_flag and nearest_index is not None :
+    #     print("entered if")
+    #
+    #     for customization in customization_list:
+    #         print(customization.print_data())
+    #     print("nearestindex",nearest_index)#just index
+    #     print("nearest index exists")
+    #     print(customization_list[nearest_index].get_command())
+    #     custom = customization_list[nearest_index]
+    #     print("tag1")
+    #     show_Leds(customization_list[nearest_index].get_command(), nearest_index)
+    #     update_list(nearest_index)
+    #     return
 
 
+
+        
 
 
 
     exists_predecessor = False
     most_recent_command = "000"
+    edit_mode = False
     if len(customization_list) != 0:
         most_recent_customization = customization_list[-1]
         most_recent_command = most_recent_customization.get_command()
         exists_predecessor = True
+        print("------")
+        print(most_recent_customization.print_data())
+        print("slider val",(my_slider.get()*20)/20)
+        print("------")
+        if most_recent_customization.get_timestamp() > round((my_slider.get()*20)/20,2):
+
+            previous_customization = min(customization_list,key=lambda x:abs(x.get_timestamp()-round((my_slider.get()*20)/20,2)))
+            print("previous",previous_customization.print_data())
+            most_recent_command = previous_customization.get_command()
+
+
+
 
 
     global Flag
     Flag = helperFlag
     if Flag:
 
-        global paused
-        paused = is_paused
 
-        if not paused:
-            pause(paused)
 
         current_time = pygame.mixer.music.get_pos() / 1000
 
@@ -552,7 +668,7 @@ def customize(is_paused, helperFlag, new_command="000000000000000000000000000000
             helpVar = 0
             counter2 = 1
             character_counter = 1
-            exists = fetch_customization(i, current_time)
+            exists = fetch_customization(i,round(my_slider.get()*20)/20)
             button_list = []
             if len(customization_list) != 0:
                 previous_flag = True
@@ -571,7 +687,7 @@ def customize(is_paused, helperFlag, new_command="000000000000000000000000000000
                         button = Button(frames[i], text="LED# " + str(button_counter) + "@" + str(i + 1),
                                         command=lambda helpVar=helpVar, i=i: [alter_bit_order(custom, helpVar, i)])
 
-                        customization = fetch_customization(i, current_time)
+                        customization = exists
                         customization_command_string = customization.get_command()
                         chunk_size = 8
                         bit_chunks_customization = [customization_command_string[i:i + chunk_size] for i in
@@ -608,8 +724,9 @@ def customize(is_paused, helperFlag, new_command="000000000000000000000000000000
                         helpVar += 1
                         button_counter += 1
                     elif not exists and exists_predecessor:
+                        print("exists predecessor")
 
-                        custom = Customization(character_counter, round(my_slider.get()*20)/20,
+                        custom = Customization(character_counter, round(my_slider.get() * 20) / 20,
                                                most_recent_command)
                         character_counter += 1
 
@@ -633,6 +750,7 @@ def customize(is_paused, helperFlag, new_command="000000000000000000000000000000
 
                         helpVar += 1
                         button_counter += 1
+
 
 
 my_slider = ttk.Scale(root, from_=0, to=100, orient=HORIZONTAL, value=0, command=slide, length=360, state='disabled')
